@@ -24,7 +24,7 @@
 
 **preProcessor**：前处理，当bitmap没有在内存缓存中时，会从资源中加载，加载完成后，会调用preProcessor返回处理后的bitmap对象，并保存到内存缓存中，这一过程主要在LoadAndDisplayImageTask类的run方法里面处理；
 
-**postProcessor**：后处理，当bitmap对象从内存中取出来，需要使用时，会调用postProcessor进行预处理，后处理这个过程在ProcessAndDisplayImageTask类和LoadAndDisplayImageTask类中都都有处理。
+**postProcessor**：后处理，当bitmap对象从内存中取出来，需要使用时，会调用postProcessor进行预处理，后处理这个过程在ProcessAndDisplayImageTask类和LoadAndDisplayImageTask类中都有处理。
   
 **preProcessor**和**postProcessor**都是通过builder外部传入，源码默认没有实现，一般可能用来处理图片的水印，滤镜等；
 
@@ -66,12 +66,131 @@
 	ImageLoader.getInstance().displayImage(imageUrl, imageView, options);
 
 
-#####4.支持各种URI：file,http/s,res等;
+#####4.支持各种资源URI：file,http/s,res等;
+
+先看源码中的定义：
+
+	HTTP("http"), HTTPS("https"), FILE("file"), CONTENT("content"), ASSETS("assets"), DRAWABLE("drawable"), UNKNOWN("");
+	
+从源码中我们可以看到，UIL支持的资源有以下几种：
+
+scheme | 描述 | 例子
+:|:|
+http | 从网络获取 |"http://site.com/image.png"
+https| 从网络获取 |"https://site.com/image.png"
+file | 本地文件路径|"file:///mnt/sdcard/image.png"
+content | android content provider|"content://media/external/images/media/13"
+assets| android app assets 目录|"assets://image.png"
+drawable | android drawable资源|"drawable://" + R.drawable.image
+ 
 
 #####5.支持同步加载和异步加载；
 
-#####6.支持view滑动时暂停加载，在view的onScrollListener里面处理回调，通过pauseLock等控制notify；相关方法pause,resume;
+同步加载只有在**ImageLoader.loadImageSync()**方法中使用，方法同步返回bitmap:
 
-#####7.支持自定义线程池，默认3个线程池，
-1个distributorExecutor用做任务分发，3个核心线程，FIFO ; 
-1个executor用做非内存缓存加载任务，1个cachedExecutor用做内存缓存加载任务，不限线程数，60S生存周期。
+	public Bitmap loadImageSync(String uri, ImageSize targetImageSize, DisplayImageOptions options) {
+		if (options == null) {
+			options = configuration.defaultDisplayImageOptions;
+		}
+		options = new DisplayImageOptions.Builder().cloneFrom(options).syncLoading(true).build();
+
+		SyncImageLoadingListener listener = new SyncImageLoadingListener();
+		loadImage(uri, targetImageSize, options, listener);
+		return listener.getLoadedBitmap();
+	}
+除非调用上面的加载方法，其它调用都是使用异步加载，使用**ImageLoadingListener**回调获取bitmap对象。
+
+#####6.支持列表滑动时暂停加载，停止时继续加载.
+
+如果在我们的应用中存在整个列表都是图片组成的话，那么一般在列表滚动的情况下，为了提升用户体验，我们是不需要进行图片加载的，然后在列表滚动结束后，再继续加载图片任务，我们可以通过UIL的**PauseOnScrollListener**来实现这个功能。
+
+	public class PauseOnScrollListener implements OnScrollListener 
+我们看，这个类其实也是实现了**AbsListView.OnScrollListener**的这个接口，下面我们主要看看滑动状态改变时，是怎样来加载图片任务的：
+
+	
+	@Override
+	public void onScrollStateChanged(AbsListView view, int scrollState) {
+		switch (scrollState) {
+			case OnScrollListener.SCROLL_STATE_IDLE:
+				imageLoader.resume();
+				break;
+			case OnScrollListener.SCROLL_STATE_TOUCH_SCROLL:
+				if (pauseOnScroll) {
+					imageLoader.pause();
+				}
+				break;
+			case OnScrollListener.SCROLL_STATE_FLING:
+				if (pauseOnFling) {
+					imageLoader.pause();
+				}
+				break;
+		}
+		if (externalListener != null) {
+			externalListener.onScrollStateChanged(view, scrollState);
+		}
+	}
+	
+通过源码我们看到，列表的不同的滑动状态时，会回调imageLoader的resume和pause方法，而这2个方法就是来控制图片任务是否执行的，我们先看看pause()方法的具体实现：
+
+	void pause() {
+		paused.set(true);
+	}
+方法体比较简单，paused是一个**AtomicBoolean**，设置为**true** ,表示当时是暂停状态；
+再看看resume()方法的具体实现：
+
+	void resume() {
+		paused.set(false);
+		synchronized (pauseLock) {
+			pauseLock.notifyAll();
+		}
+	}
+将paused布尔值设置为**false** ,同时，同步块里面调用**notifyAll()**，唤醒所有加载任务，既然有**notify** ,当然就会有对应的**wait** ,想想应该是在加载图片的任务里面处理的，那就是**LoadAndDisplayImageTask**的**run**方法了：
+
+	
+	@Override
+	public void run() {
+		if (waitIfPaused()) return;
+		// other code ....
+	}
+没错，run()方法的第一句就是判断是否暂停任务了，进入**waitIfPaused()**具体看看：
+
+	private boolean waitIfPaused() {
+		AtomicBoolean pause = engine.getPause();
+		if (pause.get()) {
+			synchronized (engine.getPauseLock()) {
+				if (pause.get()) {
+					L.d(LOG_WAITING_FOR_RESUME, memoryCacheKey);
+					try {
+						engine.getPauseLock().wait();
+					} catch (InterruptedException e) {
+						L.e(LOG_TASK_INTERRUPTED, memoryCacheKey);
+						return true;
+					}
+					L.d(LOG_RESUME_AFTER_PAUSE, memoryCacheKey);
+				}
+			}
+		}
+		return isTaskNotActual();
+	}
+好的，源码很明白，我们找到了对应的**wait()**方法；
+
+#####7.支持自定义线程池；
+
+**ImageLoaderEngine**里面定义了3个线程池：
+
+	private Executor taskExecutor;
+	private Executor taskExecutorForCachedImages;
+	private Executor taskDistributor;
+
+
+变量名|描述| 核心数|非核心数|队列类型|线程生命周期
+-|:---------|:------:|:------:|:------:|:------:|
+taskExecutor|非内存缓存加载任务|3|3|FIFO|0
+taskExecutorForCachedImages|内存缓存加载任务|3|3|FIFO|0
+taskDistributor|任务分发|0|Integer.MAX_VALUE|SynchronousQueue|60s
+
+其中 ，*taskExecutor*和*taskExecutorForCachedImages*可以自定义。
+
+任务分发和运行可以简单用下图表示：
+
+ <img src="UIL_task_run.png" width=500px height=350px/>
