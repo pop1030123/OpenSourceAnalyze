@@ -74,14 +74,14 @@
 	
 从源码中我们可以看到，UIL支持的资源有以下几种：
 
-scheme | 描述 | 例子
-:|:|
-http | 从网络获取 |"http://site.com/image.png"
-https| 从网络获取 |"https://site.com/image.png"
-file | 本地文件路径|"file:///mnt/sdcard/image.png"
-content | android content provider|"content://media/external/images/media/13"
-assets| android app assets 目录|"assets://image.png"
-drawable | android drawable资源|"drawable://" + R.drawable.image
+|scheme | 描述 | 例子|
+|---|---|---|
+|http | 从网络获取 |"http://site.com/image.png"|
+|https| 从网络获取 |"https://site.com/image.png" |
+|file | 本地文件路径|"file:///mnt/sdcard/image.png" |
+|content | android content provider|"content://media/external/images/media/13"|
+|assets| android app assets 目录|"assets://image.png"|
+|drawable | android drawable资源|"drawable://" + R.drawable.image|
  
 
 #####5.支持同步加载和异步加载；
@@ -183,11 +183,11 @@ drawable | android drawable资源|"drawable://" + R.drawable.image
 	private Executor taskDistributor;
 
 
-变量名|描述| 核心数|非核心数|队列类型|线程生命周期
--|:---------|:------:|:------:|:------:|:------:|
-taskExecutor|非内存缓存加载任务|3|3|FIFO|0
-taskExecutorForCachedImages|内存缓存加载任务|3|3|FIFO|0
-taskDistributor|任务分发|0|Integer.MAX_VALUE|SynchronousQueue|60s
+|变量名|描述| 核心数|非核心数|队列类型|线程生命周期|
+|---------|------|:------:|:------:|:------:|:---:|
+|taskExecutor|非内存缓存加载任务|3|3|FIFO|0s|
+|taskExecutorForCachedImages|内存缓存加载任务|3|3|FIFO|0s|
+|taskDistributor|任务分发|0|Integer.MAX_VALUE|SynchronousQueue|60s|
 
 其中 ，*taskExecutor*和*taskExecutorForCachedImages*可以自定义。
 
