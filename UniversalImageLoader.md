@@ -52,7 +52,7 @@
 
  **BitmapDisplayer**用来表示bitmap在UI上的显示方式，比如渐显动画显示，圆角等，内置5种类型的Displayer；
  
- <img src="UIL_bitmap_display.png" width=500px height=350px/>
+ <img src="uil/UIL_bitmap_display.png" width=500px height=350px/>
  
 需要自定义显示图片的同学，可以实现**BitmapDisplayer**接口，比如需要圆角显示 ，则创建一个圆角半径为20像素的RoundedBitmapDisplayer对象：
 
@@ -193,4 +193,4 @@
 
 任务分发和运行可以简单用下图表示：
 
- <img src="UIL_task_run.png" width=500px height=350px/>
+ <img src="uil/UIL_task_run.png" width=500px height=350px/>

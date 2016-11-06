@@ -7,7 +7,7 @@ Picasso.with(activity)
 .resizeDimen(100,200)
 .into(mTargetView);
 ~~~
-#####2.图片加载线程池**PicassoExecutorService**；
+#####2.默认的图片加载线程池**PicassoExecutorService**；
 
 核心|最大|存活时间|单位|队列
 :-:|:-:|:-:|---|----
@@ -87,17 +87,32 @@ public static Picasso with(@NonNull Context context) {
 
 ~~~java
 // 自定义Picasso
-            mPicasso = new Picasso.Builder(context)
-                    .downloader(null) // 下载器，从网络或者disk加载图片，需要实现load()和shutdown()接口；
-                    .memoryCache(null) // 内存缓存,默认是LruCache；
-                    .loggingEnabled(true) // 是否打开日志开关，一般DEBUG时，打开开关便于调试；
-                    .addRequestHandler(null) // 使用非默认的库来扩展加载图片 ；
-                    .defaultBitmapConfig(null) // 图片质量配置，argb_8888或者其它,默认无；
-                    .executor(null) // 图片加载任务线程池，默认为PicassoExecutorService;
-                    .listener(null) // 监听器，只有一个onImageLoadFailed()接口，默认为空;
-                    .indicatorsEnabled(true) // 是否在图片上显示DEBUG标识,替代debugging(),
-                    .requestTransformer(null) // 请求转换器，Request提交执行前，进行请求修改，比如使用CDN的话，可以修改url的hostname;
-                    .debugging(true) // 已经废弃，请使用indicatorsEnabled替代；
-                    .build() ;
+mPicasso = new Picasso.Builder(context)
+        .downloader(null) // 下载器，从网络或者disk加载图片，需要实现load()和shutdown()接口；
+        .memoryCache(null) // 内存缓存,默认是LruCache；
+        .loggingEnabled(true) // 是否打开日志开关，一般DEBUG时，打开开关便于调试；
+        .addRequestHandler(null) // 使用非默认的库来扩展加载图片 ；
+        .defaultBitmapConfig(null) // 图片质量配置，argb_8888或者其它,默认无；
+        .executor(null) // 图片加载任务线程池，默认为PicassoExecutorService;
+        .listener(null) // 监听器，只有一个onImageLoadFailed()接口，默认为空;
+        .indicatorsEnabled(true) // 是否在图片上显示DEBUG标识,替代debugging(),
+        .requestTransformer(null) // 请求转换器，Request提交执行前，进行请求修改，比如使用CDN的话，可以修改url的hostname;
+        .debugging(true) // 已经废弃，请使用indicatorsEnabled替代；
+        .build() ;
 ~~~
+#####8.类的解析；
+######1.RequestCreator
+<img src="picasso/request_creator.png"/>
+######2.Dispatcher
+<img src="picasso/dispatcher.png"/>
+######3.BitmapHunter
+<img src="picasso/bitmap_hunter.png"/>
+######4.Downloader
+<img src="picasso/downloader.png"/>
+#####9.图片请求大致流程；
+<img src="picasso/picasso_flow.png"/>
+
+
+
+
 
