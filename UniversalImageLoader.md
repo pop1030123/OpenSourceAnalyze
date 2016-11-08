@@ -83,6 +83,18 @@
 |assets| android app assets 目录|"assets://image.png"|
 |drawable | android drawable资源|"drawable://" + R.drawable.image|
  
+ 比如：封装drawable资源的url,使用如下代码:
+ 
+ ~~~java
+ImageDownloader.Scheme.DRAWABLE.wrap(String.valueOf(R.drawable.ic_recently));
+ ~~~
+ 
+ 那么封装后的值为字符串："**drawable://123456**" // 123456为资源ID；
+ 判断一个url是否是drawable封装的,使用如下代码：
+ 
+ ~~~java
+ ImageDownloader.Scheme.DRAWABLE.belongsTo(url);
+ ~~~
 
 #####5.支持同步加载和异步加载；
 
