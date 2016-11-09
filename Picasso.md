@@ -111,6 +111,39 @@ mPicasso = new Picasso.Builder(context)
 <img src="picasso/downloader.png"/>
 #####9.图片请求大致流程；
 <img src="picasso/picasso_flow.png"/>
+#####10.支持解析webP图片；
+webP图片的判断代码如下：
+
+~~~java
+static boolean isWebPFile(InputStream stream) throws IOException {
+    byte[] fileHeaderBytes = new byte[WEBP_FILE_HEADER_SIZE];
+    boolean isWebPFile = false;
+    if (stream.read(fileHeaderBytes, 0, WEBP_FILE_HEADER_SIZE) == WEBP_FILE_HEADER_SIZE) {
+      // If a file's header starts with RIFF and end with WEBP, the file is a WebP file
+      isWebPFile = WEBP_FILE_HEADER_RIFF.equals(new String(fileHeaderBytes, 0, 4, "US-ASCII"))
+          && WEBP_FILE_HEADER_WEBP.equals(new String(fileHeaderBytes, 8, 4, "US-ASCII"));
+    }
+    return isWebPFile;
+  }
+~~~
+WebP图片文件的前12个字节的文件头标识：
+
+~~~java
+  /* WebP file header
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |      'R'      |      'I'      |      'F'      |      'F'      |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                           File Size                           |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |      'W'      |      'E'      |      'B'      |      'P'      |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  */
+  private static final int WEBP_FILE_HEADER_SIZE = 12;
+  private static final String WEBP_FILE_HEADER_RIFF = "RIFF";
+  private static final String WEBP_FILE_HEADER_WEBP = "WEBP";
+~~~
 
 
 
