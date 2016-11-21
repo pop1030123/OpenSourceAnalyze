@@ -1,5 +1,9 @@
 ####UniversalImageLoader图片加载库源码分析总结：
 
+**参考文章**
+
+- [Android 三大图片缓存原理、特性对比 - 作者：Trinea](http://codekk.com/blogs/detail/565549e2fbbec781c2f75821)
+
 #####1.支持bitmap预处理;
 
   预处理接口为__BitmapProcessor.java__ ，源码如下：

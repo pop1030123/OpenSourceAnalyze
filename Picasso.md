@@ -1,4 +1,9 @@
 ####Picasso源码分析
+
+**参考文章**
+
+- [Android 三大图片缓存原理、特性对比 - 作者：Trinea](http://codekk.com/blogs/detail/565549e2fbbec781c2f75821)
+
 #####1.最简单的使用方式；
 
 ~~~java
