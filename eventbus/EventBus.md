@@ -31,7 +31,7 @@ EventBus类的一些主要的方法如下：
 |public boolean removeStickyEvent(Object event)|取消sticky事件|
 |public void removeAllStickyEvents()|取消所有的sticky事件|
 #####2.EventBus时序图
-<img src="sequence.png"/>
+<img src="sequence.png" width=400 height=437/>
 #####3.EventBus单一事件接收流程图
-<img src="single-flow.png"/>
+<img src="single-flow.png" width=442 height=400/>
 #####4.自定义EventBus对象
